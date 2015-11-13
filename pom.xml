@@ -11,7 +11,13 @@
     <properties>
         <compiler.version>1.7</compiler.version>
     </properties>
-
+    <dependencies>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+    </dependencies>
     <build>
         <finalName>GateWayInspector</finalName>
         <plugins>

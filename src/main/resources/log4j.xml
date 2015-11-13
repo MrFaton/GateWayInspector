@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM
+        "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
+<log4j:configuration>
+        <appender name="activity" class="org.apache.log4j.RollingFileAppender">
+                <param name="append" value="true"/>
+                <param name="threshold" value="info"/>
+                <param name="maxBackupIndex" value="2"/>
+                <param name="maxFileSize" value="1MB"/>
+                <param name="fileName" value="${user.dir}/logs/ActivityLog.txt"/>
+                <layout class="org.apache.log4j.PatternLayout">
+                        <param name="ConversionPattern" value="%d{dd.MM.yyyy HH:mm:ss} %m%n"/>
+                </layout>
+        </appender>
+        <root>
+                <priority value="info"/>
+                <appender-ref ref="activity"/>
+        </root>
+</log4j:configuration>

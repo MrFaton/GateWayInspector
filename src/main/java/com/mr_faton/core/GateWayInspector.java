@@ -2,6 +2,7 @@ package com.mr_faton.core;
 
 import com.mr_faton.core.util.SettingsManager;
 import com.mr_faton.gui.UserNotifier;
+import org.apache.log4j.Logger;
 
 import java.net.InetAddress;
 
@@ -13,6 +14,8 @@ import java.net.InetAddress;
  * @since 03.11.2015
  */
 public class GateWayInspector {
+    private static final Logger logger = Logger.getLogger("" +
+            "com.mr_faton.core.GateWayInspector");
     private boolean enable = true;
     private String currentGateway;
     private GatewayType currentGatewayType;
@@ -33,18 +36,27 @@ public class GateWayInspector {
                 if (checkGateway(primaryG)) {
                     currentGateway = primaryG;
                     currentGatewayType = GatewayType.PRIMARY;
+                    logger.info("Gateway switched to " + currentGatewayType.toString() + " - " + currentGateway);
                 } else if (checkGateway(secondaryG)) {
                     currentGateway = secondaryG;
                     currentGatewayType = GatewayType.SECONDARY;
+                    logger.info("Gateway switched to " + currentGatewayType.toString() + " - " + currentGateway);
                 } else if (checkGateway(thirdG)) {
                     currentGateway = thirdG;
                     currentGatewayType = GatewayType.THIRD;
+                    logger.info("Gateway switched to " + currentGatewayType.toString() + " - " + currentGateway);
                 } else if (checkGateway(fourthG)) {
                     currentGateway = fourthG;
                     currentGatewayType = GatewayType.FOURTH;
+                    logger.info("Gateway switched to " + currentGatewayType.toString() + " - " + currentGateway);
                 } else {
                     currentGateway = null;
                     currentGatewayType = GatewayType.NULL;
+                    logger.info("All Gateways are down!");
+                }
+                if(Thread.interrupted()) {
+                    enable = false;
+                    break;
                 }
                 Thread.sleep(SettingsManager.getDelay());
             }
