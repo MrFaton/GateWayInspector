@@ -1,7 +1,7 @@
 package com.mr_faton.core;
 
 import com.mr_faton.core.util.SettingsManager;
-import com.mr_faton.gui.UserNotifier;
+import com.mr_faton.gui.Tray;
 import org.apache.log4j.Logger;
 
 import java.net.InetAddress;
@@ -16,66 +16,77 @@ import java.net.InetAddress;
 public class GateWayInspector {
     private static final Logger logger = Logger.getLogger("" +
             "com.mr_faton.core.GateWayInspector");
-    private boolean enable = true;
-    private String currentGateway;
-    private GatewayType currentGatewayType;
-
+    private Tray tray;
+    private boolean enable = false;
+    private String currentGateway = "";
+    private String currentGatewayName = "";
+    private int delay;
 
 
     public void start() {
+        logger.info("App is start");
         enable = true;
         try {
             SettingsManager.load();
-
-            String primaryG = SettingsManager.getPrimaryGateway();
-            String secondaryG = SettingsManager.getSecondaryGateway();
-            String thirdG = SettingsManager.getThirdGateway();
-            String fourthG = SettingsManager.getFourthGateway();
-
+            delay = Integer.valueOf(SettingsManager.getSetup(SettingsManager.DELAY));
             while (enable) {
-                if (checkGateway(primaryG)) {
-                    currentGateway = primaryG;
-                    currentGatewayType = GatewayType.PRIMARY;
-                    logger.info("Gateway switched to " + currentGatewayType.toString() + " - " + currentGateway);
-                } else if (checkGateway(secondaryG)) {
-                    currentGateway = secondaryG;
-                    currentGatewayType = GatewayType.SECONDARY;
-                    logger.info("Gateway switched to " + currentGatewayType.toString() + " - " + currentGateway);
-                } else if (checkGateway(thirdG)) {
-                    currentGateway = thirdG;
-                    currentGatewayType = GatewayType.THIRD;
-                    logger.info("Gateway switched to " + currentGatewayType.toString() + " - " + currentGateway);
-                } else if (checkGateway(fourthG)) {
-                    currentGateway = fourthG;
-                    currentGatewayType = GatewayType.FOURTH;
-                    logger.info("Gateway switched to " + currentGatewayType.toString() + " - " + currentGateway);
-                } else {
-                    currentGateway = null;
-                    currentGatewayType = GatewayType.NULL;
-                    logger.info("All Gateways are down!");
+                for (int counter = 1; true; counter++) {
+                    String selectedGateway = SettingsManager.getSetup(SettingsManager.GATEWAY_NAME_PATTERN + counter);
+                    if (selectedGateway == null) break;
+                    if (checkGateway(selectedGateway)) {
+                        if (currentGateway.equals(selectedGateway)) {
+                            break;
+                        } else {
+                            changeGateway(selectedGateway, counter);
+                            break;
+                        }
+                    }
                 }
-                if(Thread.interrupted()) {
-                    enable = false;
-                    break;
-                }
-                Thread.sleep(SettingsManager.getDelay());
+                Thread.sleep(delay);
             }
         } catch (InterruptedException interruptedEx) {
             enable = false;
+            logger.info("App is stop");
         } catch (Exception ex) {
-            UserNotifier.warning(ex.getMessage());
             enable = false;
+            logger.error(ex);
+            tray.showErrorMessage("Ошибка!", "Возникла ошибка в работе приложения: \n" + ex.getMessage());
         }
     }
 
-    public String getStatus() {
-        return "Состояние: " +(enable ? "работает":"остановлен") + "\n" +
-                "Тип Gateway: " + currentGatewayType + "\n" +
-                "Адрес Gateway: " + currentGateway;
+
+    public boolean getState() {
+        return enable;
     }
+
+    public String getStatus() {
+        return "Состояние: " + (enable ? "работает" : "остановлен") + "\n" +
+                "Текущий сервер: " + currentGatewayName + " (" + currentGateway + ")";
+    }
+
+    public void setTray(Tray tray) {
+        this.tray = tray;
+    }
+
 
     private boolean checkGateway(String gateway) throws Exception {
         InetAddress inetAddress = InetAddress.getByName(gateway);
-        return inetAddress.isReachable(SettingsManager.getDelay());
+        return inetAddress.isReachable(delay);
+    }
+
+    private void changeGateway(String gatewayAddress, int gatewayNumber) throws Exception {
+        currentGateway = gatewayAddress;
+        currentGatewayName = "Сервер_" + gatewayNumber;
+
+        String[] commands = {
+                "cmd.exe",
+                "/c",
+                "route delete 0.0.0.0 mask 0.0.0.0 && route add 0.0.0.0 mask 0.0.0.0 " + gatewayAddress};
+        Process process = Runtime.getRuntime().exec(commands);
+        process.waitFor();
+
+        logger.info("Serer changed to " + currentGatewayName + " (" + currentGateway + ")");
+        tray.showInfoMessage("Изменился сервер!", "Произошло переключение на:\n" +
+                currentGatewayName + " (" + currentGateway + ")");
     }
 }

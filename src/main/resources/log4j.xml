@@ -7,7 +7,7 @@
                 <param name="threshold" value="info"/>
                 <param name="maxBackupIndex" value="2"/>
                 <param name="maxFileSize" value="1MB"/>
-                <param name="fileName" value="${user.dir}/logs/ActivityLog.txt"/>
+                <param name="file" value="${user.dir}/logs/ActivityLog.txt"/>
                 <layout class="org.apache.log4j.PatternLayout">
                         <param name="ConversionPattern" value="%d{dd.MM.yyyy HH:mm:ss} %m%n"/>
                 </layout>
